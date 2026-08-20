@@ -279,7 +279,7 @@ local function HUD_Update(dt)
  local d5="-"; local hasD=false
  if m and State.MyRoot then local r=GetRoot(m)
   if r then d5=floor((r.Position-State.MyRoot.Position).Magnitude/5); hasD=true end end
- local key=(State.Enabled and 1 or 0).."|"..State.CurrentMode.."|"..(m and m.Name or "-").."|"..d5
+ local key=(State.Enabled and 1 or 0) .. "|" .. State.CurrentMode .. "|" .. (m and m.Name or "-") .. "|" .. d5
  if key==lastHUDKey then return end
  lastHUDKey=key
  if not State.Enabled then
@@ -301,7 +301,15 @@ local function HUD_Update(dt)
 end
 
 -- ====== MENU SETUP ======
-local section=shared.AddSection("⚡ ULTRA INSTINCT "..VERSION)
+local section=shared and shared.AddSection and shared.AddSection("⚡ ULTRA INSTINCT "..VERSION) or nil
+if not section then
+  -- fallback no-op section to avoid errors if the menu API isn't available
+  section = {
+    AddToggle = function() return function() end end,
+    AddDropdown = function() return function() end end,
+    AddButton = function() return function() end end,
+  }
+end
 section:AddToggle("⚡ АКТИВИРОВАТЬ", function(st)
  State.Enabled=st
  if st then InitBase(); UpdateCache(); State.Target=nil else State.Target=nil end
@@ -313,8 +321,11 @@ local j=section:AddToggle("Прыжки", function(s) State.Settings.predictJump
 local a=section:AddToggle("Адаптив", function(s) State.Settings.adaptiveLead=s end); a(true)
 local l=section:AddToggle("Lock цели", function(s) State.Settings.targetLock=s end); l(true)
 section:AddButton("Статистика (F9)", function()
- local s=State.Stats; local ac=s.Shots>0 and string.format("%.1f%%",(s.Hits/s.Shots)*100) or "-"
- print("══ ULTRA INSTINCT ══  Shots:"..s.Shots.." Hits:"..s.Hits.." Acc:"..ac.." Kills:"..s.Kills.." Deaths:"..s.Deaths.." Streak:"..s.CurrentStreak.."/"..s.BestStreak.." Mode:"..State.CurrentMode)
+ local s = State.Stats
+ local ac = s.Shots > 0 and string.format("%.1f%%", (s.Hits / s.Shots) * 100) or "-"
+ print("══ ULTRA INSTINCT ══  Shots:"..s.Shots.." Hits:"..s.Hits.." Acc:"..ac..
+       " Kills:"..s.Kills.." Deaths:"..s.Deaths.." Streak:"..s.CurrentStreak.."/"..s.BestStreak..
+       " Mode:"..(State.CurrentMode or "-"))
 end)
 
 -- ====== MAIN LOOP (REAL-TIME IDLE & ENGAGED AUTO-CONFIG) ======
