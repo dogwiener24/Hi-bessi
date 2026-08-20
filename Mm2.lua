@@ -1,5 +1,5 @@
 -- =============================================================================
--- ⚡ ULTRA INSTINCT V24.8.1 PERF (REAL-TIME AUTO-CONFIG FIX)
+-- ⚡ ULTRA INSTINCT V24.8.1 PERF (SYNTAX & AUTO-CONFIG FIX)
 -- =============================================================================
 local shared = odh_shared_plugins
 local internal_shared = odh_internal_shared
@@ -171,7 +171,6 @@ local function CalculateLead(sp,sv,mp,ping,dist)
  local pp=sp+v*tt; if State.Settings.useGravity then pp=pp+V3(0,-0.5*GRAVITY*tt*tt,0) end; return pp-sp
 end
 
--- FIXED: Exact equality checking for instantaneous dynamic updates
 local function ApplyGPL(sim,interval,x,y,z,h,v)
  if not gpl_preset then return end; local L=State.LastApplied
  if L.H==h and L.V==v and L.Sim==sim and L.Int==interval and L.X==x and L.Y==y and L.Z==z then return end
@@ -233,7 +232,7 @@ local function startPulse()
   local t2=TweenService:Create(HUD.dot,TweenInfo.new(.5,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{Size=UDim2.new(0,7,0,7)})
   t2.Completed:Connect(function(st2) if st2~=Enum.PlaybackState.Cancelled then startPulse() end end)
   t2:Play()
- me)
+ end)
  t1:Play()
 end
 
