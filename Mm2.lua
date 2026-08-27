@@ -412,7 +412,7 @@ track(RunService.Heartbeat:Connect(function(dt)
  if State.Enabled then
   local ok,err=pcall(tick,dt)
   if not ok then if now-_lw>5 then _lw=now; warn("[UltraInstinct] "..tostring(err)) end end
- me
+ end
 end))
 
 track(Players.PlayerRemoving:Connect(function(p)
