@@ -1,5 +1,5 @@
 -- =============================================================================
--- ⚡ ULTRA INSTINCT V24.8.1 PERF (SYNTAX & AUTO-CONFIG FIX)
+-- ⚡ ULTRA INSTINCT V24.8.1 PERF (SYNTAX & AUTO-CONFIG FIX + MIXED & ANTI-MINI)
 -- =============================================================================
 local shared = odh_shared_plugins
 local internal_shared = odh_internal_shared
@@ -32,6 +32,7 @@ local MODES = {
  SECRETIVE    = {h_base=105,h_ping=.15,h_speed=1.0,v_base=105,v_ping=.10,v_dist=.12,sim_base=28,sim_speed=.2,int_base=60,int_speed=-.4,offX=0,offY=0,offZ=-1},
  ANNIHILATING = {h_base=185,h_ping=.50,h_speed=3.0,v_base=175,v_ping=.30,v_dist=.35,sim_base=65,sim_speed=1.,int_base=20,int_speed=-.05,offX=-5,offY=0,offZ=5},
  ADAPTIVE     = {h_base=125,h_ping=.22,h_speed=1.5,v_base=125,v_ping=.14,v_dist=.18,sim_base=35,sim_speed=.4,int_base=50,int_speed=-.3,offX=-2,offY=0,offZ=0,auto_switch=true},
+ MIXED        = {h_base=135,h_ping=.26,h_speed=1.65,v_base=132,v_ping=.16,v_dist=.20,sim_base=40,sim_speed=.45,int_base=42,int_speed=-.25,offX=-2.5,offY=0,offZ=1,auto_switch=true},
 }
 local ASUB = {
  CLOSE={h_base=135,h_ping=.28,h_speed=1.8,v_base=135,v_ping=.18,v_dist=.22,sim_base=42,sim_speed=.5,int_base=38,int_speed=-.2,offX=-4,offY=0,offZ=3},
@@ -44,7 +45,7 @@ local State = {
  Enabled=false, Target=nil, TargetScore=-1e9, TargetLockTime=0, LastCheck=0,
  LastApplied={H=-999,V=-999,Sim=-999,Int=-999,X=-999,Y=-999,Z=-999},
  MyRoot=nil, MyChar=nil, SmoothPos=nil, SmoothVel=nil,
- PingHistory={}, PingSmooth=60, CurrentMode="ADAPTIVE",
+ PingHistory={}, PingSmooth=60, CurrentMode="MIXED",
  MurdererPlayer=nil,
  Settings={leadMultiplier=1,verticalCorrection=1,reactionTime=DEFAULT_REACTION,minDistance=3,maxDistance=350,
    useGravity=true,useDrag=true,predictJump=true,targetLock=true,lockTime=2,prioritySystem=true,
@@ -54,6 +55,21 @@ local State = {
  ThreatMap={}, WeaponType="knife", LastShotTime=0, LastShotTarget=nil, ShotArmed=false,
 }
 local HitMarker = {}
+
+local function IsMiniAvatar(p)
+ if not p or not p.Character then return false end
+ local c = p.Character
+ local hum = c:FindFirstChildOfClass("Humanoid")
+ if hum then
+  if hum.HipHeight < 1.2 then return true end
+  local depthScale = c:FindFirstChild("BodyDepthScale")
+  local heightScale = c:FindFirstChild("BodyHeightScale")
+  if (depthScale and depthScale.Value < 0.75) or (heightScale and heightScale.Value < 0.75) then
+   return true
+  end
+ end
+ return false
+end
 
 local function GetRoot(p) local c=p and p.Character; return c and c:FindFirstChild("HumanoidRootPart") end
 local function UpdateCache()
@@ -303,7 +319,6 @@ end
 -- ====== MENU SETUP ======
 local section=shared and shared.AddSection and shared.AddSection("⚡ ULTRA INSTINCT "..VERSION) or nil
 if not section then
-  -- fallback no-op section to avoid errors if the menu API isn't available
   section = {
     AddToggle = function() return function() end end,
     AddDropdown = function() return function() end end,
@@ -314,7 +329,7 @@ section:AddToggle("⚡ АКТИВИРОВАТЬ", function(st)
  State.Enabled=st
  if st then InitBase(); UpdateCache(); State.Target=nil else State.Target=nil end
 end)
-section:AddDropdown("Режим", {"PRO","INSTINCT","SECRETIVE","ANNIHILATING","ADAPTIVE"}, function(s) State.CurrentMode=s; lastHUDKey=nil end)
+section:AddDropdown("Режим", {"PRO","INSTINCT","SECRETIVE","ANNIHILATING","ADAPTIVE","MIXED"}, function(s) State.CurrentMode=s; lastHUDKey=nil end)
 local g=section:AddToggle("Гравитация", function(s) State.Settings.useGravity=s end); g(true)
 local d=section:AddToggle("Сопротивление", function(s) State.Settings.useDrag=s end); d(true)
 local j=section:AddToggle("Прыжки", function(s) State.Settings.predictJump=s end); j(true)
@@ -336,27 +351,34 @@ local function tick(dt)
 
  local rp=LocalPlayer:GetNetworkPing()*1000; if rp<=0 then rp=State.PingSmooth or 60 end; local ping=SmoothPing(rp)
  local mk=State.CurrentMode; local mode=MODES[mk] or MODES.ADAPTIVE
- if mk=="ADAPTIVE" and mode.auto_switch then mode=ASUB.MID end
+ if (mk=="ADAPTIVE" or mk=="MIXED") and mode.auto_switch then mode=ASUB.MID end
 
  local target=FindBestTarget()
  local mR=target and GetRoot(target)
  local myR=State.MyRoot; local myP=myR and myR.Position
 
- -- IDLE FALLBACK: Run auto-config continuously when no target is present
+ -- Anti-Mini Detection & Override Logic
+ local isMiniTarget = (mk=="MIXED") and (IsMiniAvatar(target) or IsMiniAvatar(State.MurdererPlayer))
+
+ -- IDLE FALLBACK
  if not target or not mR or not myP then
   State.Target=nil; DecayAdaptive()
-  local idleH=clamp(floor(mode.h_base + ping*mode.h_ping), 80, 500)
+  local idleH_base = isMiniTarget and 100 or mode.h_base
+  local idleOffY = isMiniTarget and -88 or mode.offY
+  local idleH=clamp(floor(idleH_base + ping*mode.h_ping), 80, 500)
   local idleV=clamp(floor(mode.v_base + ping*mode.v_ping), 80, 450)
-  ApplyGPL(floor(mode.sim_base), floor(mode.int_base), mode.offX, mode.offY, mode.offZ, idleH, idleV)
+  ApplyGPL(floor(mode.sim_base), floor(mode.int_base), mode.offX, idleOffY, mode.offZ, idleH, idleV)
   return
  end
 
  local mP=mR.Position; local dist=(mP-myP).Magnitude
  if dist<State.Settings.minDistance or dist>State.Settings.maxDistance then
   State.Target=nil; DecayAdaptive()
-  local idleH=clamp(floor(mode.h_base + ping*mode.h_ping), 80, 500)
+  local idleH_base = isMiniTarget and 100 or mode.h_base
+  local idleOffY = isMiniTarget and -88 or mode.offY
+  local idleH=clamp(floor(idleH_base + ping*mode.h_ping), 80, 500)
   local idleV=clamp(floor(mode.v_base + ping*mode.v_ping), 80, 450)
-  ApplyGPL(floor(mode.sim_base), floor(mode.int_base), mode.offX, mode.offY, mode.offZ, idleH, idleV)
+  ApplyGPL(floor(mode.sim_base), floor(mode.int_base), mode.offX, idleOffY, mode.offZ, idleH, idleV)
   return
  end
 
@@ -365,17 +387,20 @@ local function tick(dt)
  local lx=clamp(delta.X*.02,-6,6); local ly=clamp(delta.Y*.02,-6,6); local lz=clamp(delta.Z*.02,-6,6)
  if State.Settings.adaptiveLead then AdaptiveCorrection(delta) end
  local ad=State.AdaptiveOffset
- if mk=="ADAPTIVE" and mode.auto_switch then
+ if (mk=="ADAPTIVE" or mk=="MIXED") and mode.auto_switch then
   if dist<30 then mode=ASUB.CLOSE elseif dist<80 then mode=ASUB.MID elseif dist<150 then mode=ASUB.SNIP else mode=ASUB.DEF end
  end
 
+ local cur_h_base = isMiniTarget and 100 or mode.h_base
+ local cur_offY   = isMiniTarget and -88 or mode.offY
+
  local mult=State.Settings.leadMultiplier; local vc=State.Settings.verticalCorrection; local speed=sv.Magnitude
- local hL=clamp((mode.h_base+ping*mode.h_ping+speed*mode.h_speed+lx*2)*mult+ad.x*3,80,500)
+ local hL=clamp((cur_h_base+ping*mode.h_ping+speed*mode.h_speed+lx*2)*mult+ad.x*3,80,500)
  local vL=clamp((mode.v_base+ping*mode.v_ping+dist*mode.v_dist+ly*2)*vc+ad.y*3,80,450); local yO=0
  if State.Settings.predictJump then local vs=sv.Y; if vs>3 then vL=vL+35; yO=yO+3 elseif vs<-8 then vL=vL-25; yO=yO-4 end end
  local sim=clamp(mode.sim_base+speed*mode.sim_speed+abs(lx)*.5+abs(ad.x)*.2,15,130)
  local intv=clamp(mode.int_base+speed*mode.int_speed-abs(lx)*.3-abs(ad.x)*.1,5,120)
- local oX=mode.offX+lx*.5+ad.x; local oY=mode.offY+ly*.5+yO+ad.y; local oZ=mode.offZ+lz*.5+ad.z
+ local oX=mode.offX+lx*.5+ad.x; local oY=cur_offY+ly*.5+yO+ad.y; local oZ=mode.offZ+lz*.5+ad.z
 
  ApplyGPL(floor(sim),floor(intv),floor(oX),floor(oY),floor(oZ),floor(hL),floor(vL))
 end
@@ -387,7 +412,7 @@ track(RunService.Heartbeat:Connect(function(dt)
  if State.Enabled then
   local ok,err=pcall(tick,dt)
   if not ok then if now-_lw>5 then _lw=now; warn("[UltraInstinct] "..tostring(err)) end end
- end
+ me
 end))
 
 track(Players.PlayerRemoving:Connect(function(p)
@@ -422,4 +447,4 @@ end
 _G.__UI_CLEANUP=cleanup
 
 UpdateCache(); UpdateMurdererCache(); HUD_Init()
-print("⚡ ULTRA INSTINCT "..VERSION.." loaded (real-time ping auto-config operational).")
+print("⚡ ULTRA INSTINCT "..VERSION.." loaded with MIXED mode and Anti-Mini switching operational.")
