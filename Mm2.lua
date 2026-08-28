@@ -20,25 +20,25 @@ local VERSION = "24.8.1 PERF"
 local GRAVITY, BULLET_SPEED = 196.2, 2500
 local DEFAULT_REACTION, ADAPTIVE_GAIN, MAX_ADAPT = 0.15, 0.05, 3.0
 local MAX_THREAT, HYSTERESIS, HIT_WINDOW, DEAD_ZONE = 500, 15, 0.6, 0.2
-local MURDERER_SCAN = 0.5
+local MURDERER_SCAN = 0.2
 
 if type(_G.__UI_CLEANUP) == "function" then pcall(_G.__UI_CLEANUP) end
 local _conns = {}
 local function track(c) _conns[#_conns+1] = c; return c end
 
 local MODES = {
- PRO          = {h_base=125,h_ping=.22,h_speed=1.5,v_base=125,v_ping=.14,v_dist=.18,sim_base=35,sim_speed=.4,int_base=50,int_speed=-.3,offX=-2,offY=0,offZ=0},
- INSTINCT     = {h_base=145,h_ping=.30,h_speed=1.8,v_base=140,v_ping=.18,v_dist=.22,sim_base=45,sim_speed=.5,int_base=35,int_speed=-.2,offX=-3,offY=0,offZ=2},
+ PRO          = {h_base=90,h_ping=.22,h_speed=2,v_base=125,v_ping=.14,v_dist=.18,sim_base=35,sim_speed=.4,int_base=50,int_speed=-.3,offX=-58,offY=-15,offZ=1},
+ INSTINCT     = {h_base=90,h_ping=.30,h_speed=2,v_base=140,v_ping=.18,v_dist=.22,sim_base=45,sim_speed=.5,int_base=35,int_speed=-.2,offX=-59,offY=-15,offZ=-1},
  SECRETIVE    = {h_base=105,h_ping=.15,h_speed=1.0,v_base=105,v_ping=.10,v_dist=.12,sim_base=28,sim_speed=.2,int_base=60,int_speed=-.4,offX=0,offY=0,offZ=-1},
  ANNIHILATING = {h_base=185,h_ping=.50,h_speed=3.0,v_base=175,v_ping=.30,v_dist=.35,sim_base=65,sim_speed=1.,int_base=20,int_speed=-.05,offX=-5,offY=0,offZ=5},
  ADAPTIVE     = {h_base=125,h_ping=.22,h_speed=1.5,v_base=125,v_ping=.14,v_dist=.18,sim_base=35,sim_speed=.4,int_base=50,int_speed=-.3,offX=-2,offY=0,offZ=0,auto_switch=true},
- MIXED        = {h_base=135,h_ping=.26,h_speed=1.65,v_base=132,v_ping=.16,v_dist=.20,sim_base=40,sim_speed=.45,int_base=42,int_speed=-.25,offX=-2.5,offY=0,offZ=1,auto_switch=true},
+ MIXED        = {h_base=135,h_ping=.26,h_speed=1.65,v_base=132,v_ping=.16,v_dist=.20,sim_base=40,sim_speed=.45,int_base=42,int_speed=25,offX=-12,offY=-67,offZ=-1,auto_switch=true},
 }
 local ASUB = {
- CLOSE={h_base=135,h_ping=.28,h_speed=1.8,v_base=135,v_ping=.18,v_dist=.22,sim_base=42,sim_speed=.5,int_base=38,int_speed=-.2,offX=-4,offY=0,offZ=3},
- MID  ={h_base=125,h_ping=.22,h_speed=1.5,v_base=125,v_ping=.14,v_dist=.18,sim_base=35,sim_speed=.4,int_base=50,int_speed=-.3,offX=-2,offY=0,offZ=1},
- SNIP ={h_base=95, h_ping=.10,h_speed=.8, v_base=95, v_ping=.08,v_dist=.10,sim_base=22,sim_speed=.15,int_base=68,int_speed=-.5,offX=1,offY=0,offZ=-2},
- DEF  ={h_base=105,h_ping=.15,h_speed=1.0,v_base=105,v_ping=.10,v_dist=.12,sim_base=28,sim_speed=.2,int_base=60,int_speed=-.4,offX=0,offY=0,offZ=-1},
+ CLOSE={h_base=92,h_ping=.28,h_speed=1.8,v_base=135,v_ping=.18,v_dist=.22,sim_base=42,sim_speed=.5,int_base=38,int_speed=-5,offX=-58,offY=-12,offZ=-1},
+ MID  ={h_base=101,h_ping=.22,h_speed=1.5,v_base=125,v_ping=.14,v_dist=.18,sim_base=35,sim_speed=.4,int_base=50,int_speed=-4,offX=-78,offY=-16,offZ=1},
+ SNIP ={h_base=120, h_ping=.10,h_speed=.8, v_base=95, v_ping=.08,v_dist=.10,sim_base=22,sim_speed=.15,int_base=68,int_speed=-5,offX=-89,offY=-16,offZ=0},
+ DEF  ={h_base=95,h_ping=.15,h_speed=1.0,v_base=105,v_ping=.10,v_dist=.12,sim_base=28,sim_speed=.2,int_base=60,int_speed=-4,offX=-78,offY=-14,offZ=-1},
 }
 
 local State = {
@@ -330,11 +330,11 @@ section:AddToggle("⚡ АКТИВИРОВАТЬ", function(st)
  if st then InitBase(); UpdateCache(); State.Target=nil else State.Target=nil end
 end)
 section:AddDropdown("Режим", {"PRO","INSTINCT","SECRETIVE","ANNIHILATING","ADAPTIVE","MIXED"}, function(s) State.CurrentMode=s; lastHUDKey=nil end)
-local g=section:AddToggle("Гравитация", function(s) State.Settings.useGravity=s end); g(true)
-local d=section:AddToggle("Сопротивление", function(s) State.Settings.useDrag=s end); d(true)
-local j=section:AddToggle("Прыжки", function(s) State.Settings.predictJump=s end); j(true)
-local a=section:AddToggle("Адаптив", function(s) State.Settings.adaptiveLead=s end); a(true)
-local l=section:AddToggle("Lock цели", function(s) State.Settings.targetLock=s end); l(true)
+local g=section:AddToggle("Gravity", function(s) State.Settings.useGravity=s end); g(true)
+local d=section:AddToggle("Drags", function(s) State.Settings.useDrag=s end); d(true)
+local j=section:AddToggle("Predict Jump", function(s) State.Settings.predictJump=s end); j(true)
+local a=section:AddToggle("Lead", function(s) State.Settings.adaptiveLead=s end); a(true)
+local l=section:AddToggle("Target Lock", function(s) State.Settings.targetLock=s end); l(true)
 section:AddButton("Статистика (F9)", function()
  local s = State.Stats
  local ac = s.Shots > 0 and string.format("%.1f%%", (s.Hits / s.Shots) * 100) or "-"
@@ -349,7 +349,7 @@ local function tick(dt)
  if not State.MyRoot or not State.MyRoot.Parent then UpdateCache(); if not State.MyRoot then DecayAdaptive(); return end end
  CheckHitProxy()
 
- local rp=LocalPlayer:GetNetworkPing()*1000; if rp<=0 then rp=State.PingSmooth or 60 end; local ping=SmoothPing(rp)
+ local rp=LocalPlayer:GetNetworkPing()*1000; if rp<=0 then rp=State.PingSmooth or 100 end; local ping=SmoothPing(rp)
  local mk=State.CurrentMode; local mode=MODES[mk] or MODES.ADAPTIVE
  if (mk=="ADAPTIVE" or mk=="MIXED") and mode.auto_switch then mode=ASUB.MID end
 
