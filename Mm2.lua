@@ -163,11 +163,11 @@ local function FindBestTarget()
   local c=State.Target.Character
   if c and c:FindFirstChild("Humanoid") and c.Humanoid.Health>0 and (now-State.TargetLockTime<State.Settings.lockTime) then
    if IsMurderer(State.Target) then return State.Target end end end
- if now-State.LastCheck<0.5 then return State.Target end; State.LastCheck=now; BuildThreatMap()
+ if now-State.LastCheck<0.02 then return State.Target end; State.LastCheck=now; BuildThreatMap()
  if not State.MyRoot then return nil end
- local cur=State.ThreatMap[State.Target] or -1e9; if State.Target and IsMurderer(State.Target) then cur=cur*1.5 end
+ local cur=State.ThreatMap[State.Target] or -1e9; if State.Target and IsMurderer(State.Target) then cur=cur*0.01 end
  local best,bs=nil,-1e9
- for pl,th in pairs(State.ThreatMap) do if pl~=LocalPlayer then local s=IsMurderer(pl) and th*1.5 or th
+ for pl,th in pairs(State.ThreatMap) do if pl~=LocalPlayer then local s=IsMurderer(pl) and th*0.01 or th
   if s>bs then bs=s; best=pl end end end
  if State.Target and best and best~=State.Target and bs<cur+HYSTERESIS then return State.Target end
  if best~=State.Target then resetSmooth() end
@@ -177,7 +177,7 @@ end
 local function SmoothData(root,dt)
  local p,vel=root.Position,root.AssemblyLinearVelocity
  if not State.SmoothPos then State.SmoothPos,State.SmoothVel=p,vel
- else State.SmoothPos=State.SmoothPos:Lerp(p,1-exp(-dt/0.06)); State.SmoothVel=State.SmoothVel:Lerp(vel,1-exp(-dt/0.10)) end
+ else State.SmoothPos=State.SmoothPos:Lerp(p,1-exp(-dt/0.06)); State.SmoothVel=State.SmoothVel:Lerp(vel,1-exp(-dt/0.01)) end
  return State.SmoothPos,State.SmoothVel
 end
 
@@ -268,7 +268,7 @@ local function HUD_Init()
  Instance.new("UICorner",dot).CornerRadius=UDim.new(1,0)
  local lb=Instance.new("TextLabel",f); lb.LayoutOrder=2; lb.Size=UDim2.new(0,0,1,0); lb.AutomaticSize=Enum.AutomaticSize.X
  lb.BackgroundTransparency=1; lb.Font=Enum.Font.GothamBold; lb.RichText=true
- lb.Text='<font color="#788296">⚡OFF</font>'; lb.TextColor3=Color3.fromRGB(220,230,240); lb.TextSize=11; lb.ZIndex=11
+ lb.Text='<font color="#788296">Dealdough</font>'; lb.TextColor3=Color3.fromRGB(220,230,240); lb.TextSize=11; lb.ZIndex=11
  local hm=Instance.new("Frame"); hm.Name="@hitmarker"; hm.Size=UDim2.new(0,40,0,40)
  hm.Position=UDim2.new(.5,0,.5,0); hm.AnchorPoint=Vector2.new(.5,.5); hm.BackgroundTransparency=1; hm.ZIndex=12; hm.Parent=sg
  local hmH=Instance.new("Frame",hm); hmH.Size=UDim2.new(0,24,0,2); hmH.Position=UDim2.new(.5,0,.5,0); hmH.AnchorPoint=Vector2.new(.5,.5)
@@ -299,7 +299,7 @@ local function HUD_Update(dt)
  if key==lastHUDKey then return end
  lastHUDKey=key
  if not State.Enabled then
-  HUD.label.Text='<font color="#788296">⚡OFF</font>'
+  HUD.label.Text='<font color="#788296">Dealdough</font>'
   HUD.dot.BackgroundColor3=Color3.fromRGB(120,130,150)
   HUD.stroke.Color=Color3.fromRGB(70,80,100); HUD.stroke.Transparency=.55; return
  end
