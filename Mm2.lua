@@ -32,13 +32,13 @@ local MODES = {
  SECRETIVE    = {h_base=105,h_ping=.15,h_speed=0.02,v_base=105,v_ping=.10,v_dist=.12,sim_base=28,sim_speed=.2,int_base=60,int_speed=-.4,offX=12,offY=-78,offZ=-1},
  ANNIHILATING = {h_base=185,h_ping=.50,h_speed=0.02,v_base=175,v_ping=.30,v_dist=.35,sim_base=65,sim_speed=1.,int_base=20,int_speed=-.1,offX=-15,offY=-82,offZ=-1},
  ADAPTIVE     = {h_base=125,h_ping=.22,h_speed=0.02,v_base=125,v_ping=.14,v_dist=.18,sim_base=35,sim_speed=.4,int_base=50,int_speed=-.3,offX=-12,offY=-99,offZ=0,auto_switch=true},
- MIXED        = {h_base=218,h_ping=.26,h_speed=0.02,v_base=200,v_ping=.16,v_dist=.20,sim_base=54,sim_speed=.45,int_base=74,int_speed=-.2,offX=-12,offY=-197,offZ=-1,auto_switch=true},
+ MIXED        = {h_base=115,h_ping=.26,h_speed=0.02,v_base=115,v_ping=.16,v_dist=.20,sim_base=40,sim_speed=.5,int_base=138,int_speed=-.2,offX=-5,offY=-99,offZ=-2,auto_switch=true},
 }
 local ASUB = {
- CLOSE={h_base=184,h_ping=.28,h_speed=0.002,v_base=173,v_ping=.18,v_dist=.22,sim_base=72,sim_speed=.5,int_base=64,int_speed=-5,offX=-9,offY=-99,offZ=0},
- MID  ={h_base=202,h_ping=.22,h_speed=0.02,v_base=194,v_ping=.14,v_dist=.18,sim_base=54,sim_speed=.4,int_base=78,int_speed=-4,offX=-10,offY=-150,offZ=-1},
+ CLOSE={h_base=166,h_ping=.28,h_speed=0.2,v_base=156,v_ping=.18,v_dist=.22,sim_base=46,sim_speed=.5,int_base=40,int_speed=-5,offX=-6,offY=-67,offZ=0},
+ MID  ={h_base=202,h_ping=.22,h_speed=0.0,v_base=194,v_ping=.14,v_dist=.18,sim_base=54,sim_speed=.4,int_base=78,int_speed=-4,offX=-10,offY=-150,offZ=-1},
  SNIP ={h_base=210, h_ping=.10,h_speed=0.2, v_base=206, v_ping=.08,v_dist=.10,sim_base=58,sim_speed=.15,int_base=72,int_speed=-5,offX=-11,offY=-179,offZ=-1},
- DEF  ={h_base=184,h_ping=.15,h_speed=0.20,v_base=170,v_ping=.10,v_dist=.12,sim_base=70,sim_speed=.2,int_base=68,int_speed=-4,offX=-9,offY=-98,offZ=0},
+ DEF  ={h_base=138,h_ping=.15,h_speed=0.2,v_base=148,v_ping=.10,v_dist=.12,sim_base=34,sim_speed=.2,int_base=28,int_speed=-4,offX=-2,offY=-89,offZ=0},
 }
 
 local State = {
