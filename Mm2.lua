@@ -27,18 +27,18 @@ local _conns = {}
 local function track(c) _conns[#_conns+1] = c; return c end
 
 local MODES = {
- PRO          = {h_base=178,h_ping=.22,h_speed=0.02,v_base=170,v_ping=.14,v_dist=.18,sim_base=68,sim_speed=.4,int_base=60,int_speed=-.3,offX=-8,offY=-100,offZ=0},
- INSTINCT     = {h_base=192,h_ping=.30,h_speed=0.02,v_base=180,v_ping=.18,v_dist=.22,sim_base=78,sim_speed=.5,int_base=72,int_speed=-.2,offX=-10,offY=-101,offZ=0},
+ PRO          = {h_base=185,h_ping=.25,h_speed=0.01,v_base=175,v_ping=.16,v_dist=.16,sim_base=72,sim_speed=.35,int_base=65,int_speed=-.25,offX=-8,offY=-102,offZ=0,antiSpamJump=true},
+ INSTINCT     = {h_base=200,h_ping=.32,h_speed=0.02,v_base=190,v_ping=.20,v_dist=.24,sim_base=85,sim_speed=.55,int_base=80,int_speed=-.15,offX=-11,offY=-104,offZ=0,antiSpamJump=true,noMissedShots=true},
  SECRETIVE    = {h_base=105,h_ping=.15,h_speed=0.02,v_base=105,v_ping=.10,v_dist=.12,sim_base=28,sim_speed=.2,int_base=60,int_speed=-.4,offX=12,offY=-78,offZ=-1},
  ANNIHILATING = {h_base=185,h_ping=.50,h_speed=0.02,v_base=175,v_ping=.30,v_dist=.35,sim_base=65,sim_speed=1.,int_base=20,int_speed=-.1,offX=-15,offY=-82,offZ=-1},
  ADAPTIVE     = {h_base=125,h_ping=.22,h_speed=0.02,v_base=125,v_ping=.14,v_dist=.18,sim_base=35,sim_speed=.4,int_base=50,int_speed=-.3,offX=-12,offY=-99,offZ=0,auto_switch=true},
- MIXED        = {h_base=115,h_ping=.26,h_speed=0.02,v_base=115,v_ping=.16,v_dist=.20,sim_base=40,sim_speed=.5,int_base=138,int_speed=-.2,offX=-5,offY=-99,offZ=-2,auto_switch=true},
+ MIXED        = {h_base=120,h_ping=.28,h_speed=0.02,v_base=120,v_ping=.18,v_dist=.22,sim_base=45,sim_speed=.55,int_base=145,int_speed=-.18,offX=-6,offY=-95,offZ=-2,auto_switch=true,antiMini=true,antiSpamJump=true,noMissedShots=true,bodyShot=true},
 }
 local ASUB = {
- CLOSE={h_base=166,h_ping=.28,h_speed=0.2,v_base=156,v_ping=.18,v_dist=.22,sim_base=46,sim_speed=.5,int_base=40,int_speed=-5,offX=-6,offY=-67,offZ=0},
- MID  ={h_base=202,h_ping=.22,h_speed=0.0,v_base=194,v_ping=.14,v_dist=.18,sim_base=54,sim_speed=.4,int_base=78,int_speed=-4,offX=-10,offY=-150,offZ=-1},
- SNIP ={h_base=210, h_ping=.10,h_speed=0.2, v_base=206, v_ping=.08,v_dist=.10,sim_base=58,sim_speed=.15,int_base=72,int_speed=-5,offX=-11,offY=-179,offZ=-1},
- DEF  ={h_base=138,h_ping=.15,h_speed=0.2,v_base=148,v_ping=.10,v_dist=.12,sim_base=34,sim_speed=.2,int_base=28,int_speed=-4,offX=-2,offY=-89,offZ=0},
+ CLOSE={h_base=170,h_ping=.30,h_speed=0.2,v_base=160,v_ping=.20,v_dist=.24,sim_base=50,sim_speed=.55,int_base=45,int_speed=-5,offX=-6,offY=-65,offZ=0},
+ MID  ={h_base=208,h_ping=.24,h_speed=0.0,v_base=200,v_ping=.16,v_dist=.20,sim_base=58,sim_speed=.45,int_base=85,int_speed=-3.5,offX=-11,offY=-148,offZ=-1},
+ SNIP ={h_base=215, h_ping=.12,h_speed=0.2, v_base=210, v_ping=.10,v_dist=.12,sim_base=62,sim_speed=.18,int_base=78,int_speed=-4.5,offX=-12,offY=-176,offZ=-1},
+ DEF  ={h_base=142,h_ping=.17,h_speed=0.2,v_base=152,v_ping=.12,v_dist=.14,sim_base=38,sim_speed=.25,int_base=32,int_speed=-3.8,offX=-3,offY=-87,offZ=0},
 }
 
 local State = {
@@ -53,6 +53,7 @@ local State = {
  Stats={Shots=0,Hits=0,Kills=0,Deaths=0,StartTime=time(),BestStreak=0,CurrentStreak=0},
  ErrorHistory={}, AdaptiveOffset={x=0,y=0,z=0}, AdaptiveConfidence=.5,
  ThreatMap={}, WeaponType="knife", LastShotTime=0, LastShotTarget=nil, ShotArmed=false,
+ LastJumpY=0, JumpCooldown=0,
 }
 local HitMarker = {}
 
@@ -118,6 +119,18 @@ local function UpdateMurdererCache()
   if pl~=LocalPlayer and IsMurderer(pl) then found=pl; break end
  end
  State.MurdererPlayer=found
+end
+
+local function DetectSpamJump(sv)
+ if not sv then return false end
+ local currentY = sv.Y
+ local timeSinceLastJump = clock() - State.JumpCooldown
+ if currentY > 15 and timeSinceLastJump > 0.15 then
+  State.LastJumpY = currentY
+  State.JumpCooldown = clock()
+  return true
+ end
+ return currentY > 8 and (clock() - State.JumpCooldown) < 0.5
 end
 
 local function AdaptiveCorrection(err)
@@ -357,8 +370,9 @@ local function tick(dt)
  local mR=target and GetRoot(target)
  local myR=State.MyRoot; local myP=myR and myR.Position
 
- -- Anti-Mini Detection & Override Logic
- local isMiniTarget = (mk=="MIXED") and (IsMiniAvatar(target) or IsMiniAvatar(State.MurdererPlayer))
+ -- Feature Detection
+ local isMiniTarget = (mk=="MIXED") and mode.antiMini and (IsMiniAvatar(target) or IsMiniAvatar(State.MurdererPlayer))
+ local isSpamJumping = (mode.antiSpamJump and target) and DetectSpamJump(mR and mR.AssemblyLinearVelocity or nil)
 
  -- IDLE FALLBACK
  if not target or not mR or not myP then
@@ -397,7 +411,19 @@ local function tick(dt)
  local mult=State.Settings.leadMultiplier; local vc=State.Settings.verticalCorrection; local speed=sv.Magnitude
  local hL=clamp((cur_h_base+ping*mode.h_ping+speed*mode.h_speed+lx*2)*mult+ad.x*3,80,500)
  local vL=clamp((mode.v_base+ping*mode.v_ping+dist*mode.v_dist+ly*2)*vc+ad.y*3,80,450); local yO=0
- if State.Settings.predictJump then local vs=sv.Y; if vs>3 then vL=vL+35; yO=yO+3 elseif vs<-8 then vL=vL-25; yO=yO-4 end end
+ 
+ -- Anti-Spam Jump Detection
+ if isSpamJumping then
+  vL=vL+45
+  yO=yO+5
+ elseif State.Settings.predictJump then 
+  local vs=sv.Y; if vs>3 then vL=vL+35; yO=yO+3 elseif vs<-8 then vL=vL-25; yO=yO-4 end 
+ end
+ 
+ -- Body Shot Adjustment for MIXED mode
+ local bodyAdjust = (mode.bodyShot and 18) or 0
+ vL = vL - bodyAdjust
+
  local sim=clamp(mode.sim_base+speed*mode.sim_speed+abs(lx)*.5+abs(ad.x)*.2,15,130)
  local intv=clamp(mode.int_base+speed*mode.int_speed-abs(lx)*.3-abs(ad.x)*.1,5,120)
  local oX=mode.offX+lx*.5+ad.x; local oY=cur_offY+ly*.5+yO+ad.y; local oZ=mode.offZ+lz*.5+ad.z
@@ -447,4 +473,4 @@ end
 _G.__UI_CLEANUP=cleanup
 
 UpdateCache(); UpdateMurdererCache(); HUD_Init()
-print("⚡ ULTRA INSTINCT "..VERSION.." loaded with MIXED mode and Anti-Mini switching operational.")
+print("⚡ ULTRA INSTINCT "..VERSION.." loaded with enhanced modes: PRO, INSTINCT, and MIXED.")
