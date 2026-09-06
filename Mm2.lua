@@ -28,17 +28,17 @@ local function track(c) _conns[#_conns+1] = c; return c end
 
 local MODES = {
  PRO          = {h_base=185,h_ping=.25,h_speed=0.01,v_base=175,v_ping=.16,v_dist=.16,sim_base=72,sim_speed=.35,int_base=65,int_speed=-.25,offX=-8,offY=-102,offZ=0,desc="Pro Shot"},
- INSTINCT     = {h_base=200,h_ping=.32,h_speed=0.02,v_base=190,v_ping=.20,v_dist=.24,sim_base=85,sim_speed=.55,int_base=80,int_speed=-.15,offX=-11,offY=-104,offZ=0,noMissed=true,antiSpam=true,desc="No Missed + Anti-Spam"},
+ INSTINCT     = {h_base=167,h_ping=.32,h_speed=0.02,v_base=190,v_ping=.20,v_dist=.24,sim_base=85,sim_speed=.55,int_base=67,int_speed=-.15,offX=-11,offY=-104,offZ=0,noMissed=true,antiSpam=true,desc="No Missed + Anti-Spam"},
  SECRETIVE    = {h_base=105,h_ping=.15,h_speed=0.02,v_base=105,v_ping=.10,v_dist=.12,sim_base=28,sim_speed=.2,int_base=60,int_speed=-.4,offX=12,offY=-78,offZ=-1},
  ANNIHILATING = {h_base=185,h_ping=.50,h_speed=0.02,v_base=175,v_ping=.30,v_dist=.35,sim_base=65,sim_speed=1.,int_base=20,int_speed=-.1,offX=-15,offY=-82,offZ=-1},
  ADAPTIVE     = {h_base=125,h_ping=.22,h_speed=0.02,v_base=125,v_ping=.14,v_dist=.18,sim_base=35,sim_speed=.4,int_base=50,int_speed=-.3,offX=-12,offY=-99,offZ=0,auto_switch=true},
- MIXED        = {h_base=120,h_ping=.28,h_speed=0.02,v_base=120,v_ping=.18,v_dist=.22,sim_base=45,sim_speed=.55,int_base=145,int_speed=-.18,offX=-6,offY=-95,offZ=-2,auto_switch=true,antiMini=true,antiSpam=true,noMissed=true,bodyShot=true,desc="Anti-Mini + Body Shot"},
+ MIXED        = {h_base=120,h_ping=.28,h_speed=0.02,v_base=120,v_ping=.18,v_dist=.22,sim_base=45,sim_speed=.55,int_base=68,int_speed=-.18,offX=-12,offY=-95,offZ=-1,auto_switch=true,antiMini=true,antiSpam=true,noMissed=true,bodyShot=true,desc="Anti-Mini + Body Shot"},
 }
 local ASUB = {
- CLOSE={h_base=170,h_ping=.30,h_speed=0.2,v_base=160,v_ping=.20,v_dist=.24,sim_base=50,sim_speed=.55,int_base=45,int_speed=-5,offX=-6,offY=-65,offZ=0},
- MID  ={h_base=208,h_ping=.24,h_speed=0.0,v_base=200,v_ping=.16,v_dist=.20,sim_base=58,sim_speed=.45,int_base=85,int_speed=-3.5,offX=-11,offY=-148,offZ=-1},
- SNIP ={h_base=215, h_ping=.12,h_speed=0.2, v_base=210, v_ping=.10,v_dist=.12,sim_base=62,sim_speed=.18,int_base=78,int_speed=-4.5,offX=-12,offY=-176,offZ=-1},
- DEF  ={h_base=142,h_ping=.17,h_speed=0.2,v_base=152,v_ping=.12,v_dist=.14,sim_base=38,sim_speed=.25,int_base=32,int_speed=-3.8,offX=-3,offY=-87,offZ=0},
+ CLOSE={h_base=100,h_ping=.30,h_speed=0.2,v_base=147,v_ping=.20,v_dist=.24,sim_base=50,sim_speed=.55,int_base=45,int_speed=-5,offX=-6,offY=-65,offZ=0},
+ MID  ={h_base=199,h_ping=.24,h_speed=0.0,v_base=150,v_ping=.16,v_dist=.20,sim_base=58,sim_speed=.45,int_base=85,int_speed=-3.5,offX=-11,offY=-148,offZ=-1},
+ SNIP ={h_base=201, h_ping=.12,h_speed=0.2, v_base=129, v_ping=.10,v_dist=.12,sim_base=62,sim_speed=.18,int_base=78,int_speed=-4.5,offX=-12,offY=-176,offZ=-1},
+ DEF  ={h_base=102,h_ping=.17,h_speed=0.2,v_base=167,v_ping=.12,v_dist=.14,sim_base=38,sim_speed=.25,int_base=32,int_speed=-3.8,offX=-3,offY=-87,offZ=0},
 }
 
 local State = {
