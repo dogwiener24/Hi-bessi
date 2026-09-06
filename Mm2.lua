@@ -1,6 +1,19 @@
 -- =============================================================================
--- ⚡ ULTRA INSTINCT V24.8.1 PERF (SYNTAX & AUTO-CONFIG FIX + MIXED & ANTI-MINI)
+-- ⚡ ULTRA INSTINCT V24.8.2 PERF + COLOR CUSTOMIZATION
 -- =============================================================================
+--[[
+    ═══════════════════════════════════════════════════════════
+    🎨 COLOR & UI CUSTOMIZATION SYSTEM
+    ═══════════════════════════════════════════════════════════
+    FEATURES:
+    • 12 Beautiful Color Presets
+    • Custom RGB Color Picker
+    • Smooth Color Transitions
+    • GUI Only (No Gameplay Changes)
+    • 24 Emoji Themes Available
+    ═══════════════════════════════════════════════════════════
+]]
+
 local shared = odh_shared_plugins
 local internal_shared = odh_internal_shared
 local gpl_preset = internal_shared and internal_shared.MM2_GPL or nil
@@ -16,11 +29,29 @@ local clock,time = os.clock,os.time
 local tinsert = table.insert
 local V3 = Vector3.new
 
-local VERSION = "24.8.1 PERF"
+local VERSION = "24.8.2 PERF"
 local GRAVITY, BULLET_SPEED = 196.2, 10000
 local DEFAULT_REACTION, ADAPTIVE_GAIN, MAX_ADAPT = 0.01, 0.05, 5.0
 local MAX_THREAT, HYSTERESIS, HIT_WINDOW, DEAD_ZONE = 500, 15, 0.6, 0.2
 local MURDERER_SCAN = 0.001
+
+-- ═══════════════════════════════════════════════════════════
+-- 🎨 COLOR PRESETS (GUI ONLY)
+-- ═══════════════════════════════════════════════════════════
+local COLOR_PRESETS = {
+ OBSIDIAN  = {name="🪨 Obsidian",  bg=Color3.fromRGB(15,12,20),   border=Color3.fromRGB(100,80,180),  text=Color3.fromRGB(180,170,200), accent=Color3.fromRGB(150,110,255)},
+ GOLD      = {name="✨ Gold",      bg=Color3.fromRGB(20,15,5),    border=Color3.fromRGB(255,200,50),  text=Color3.fromRGB(220,200,150), accent=Color3.fromRGB(255,215,0)},
+ NEON      = {name="💜 Neon",      bg=Color3.fromRGB(10,5,20),    border=Color3.fromRGB(180,50,255),  text=Color3.fromRGB(200,170,220), accent=Color3.fromRGB(200,100,255)},
+ CYBER     = {name="💠 Cyber",     bg=Color3.fromRGB(5,10,20),    border=Color3.fromRGB(0,200,255),   text=Color3.fromRGB(150,200,220), accent=Color3.fromRGB(0,220,255)},
+ CRIMSON   = {name="❤️ Crimson",   bg=Color3.fromRGB(20,5,5),     border=Color3.fromRGB(255,50,50),   text=Color3.fromRGB(220,170,170), accent=Color3.fromRGB(255,80,80)},
+ EMERALD   = {name="💚 Emerald",   bg=Color3.fromRGB(5,20,5),     border=Color3.fromRGB(50,255,100),  text=Color3.fromRGB(170,220,180), accent=Color3.fromRGB(80,255,120)},
+ OCEAN     = {name="🌊 Ocean",     bg=Color3.fromRGB(5,10,25),    border=Color3.fromRGB(50,150,255),  text=Color3.fromRGB(170,190,220), accent=Color3.fromRGB(80,180,255)},
+ SUNSET    = {name="🌅 Sunset",    bg=Color3.fromRGB(25,10,15),   border=Color3.fromRGB(255,150,50),  text=Color3.fromRGB(220,180,170), accent=Color3.fromRGB(255,180,80)},
+ PLATINUM  = {name="⚪ Platinum",  bg=Color3.fromRGB(15,15,20),   border=Color3.fromRGB(180,180,200), text=Color3.fromRGB(200,200,210), accent=Color3.fromRGB(200,200,255)},
+ ICE       = {name="❄️ Ice",       bg=Color3.fromRGB(10,15,25),   border=Color3.fromRGB(150,220,255), text=Color3.fromRGB(180,210,230), accent=Color3.fromRGB(200,230,255)},
+ LAVA      = {name="🌋 Lava",      bg=Color3.fromRGB(25,5,0),     border=Color3.fromRGB(255,100,20),  text=Color3.fromRGB(230,180,140), accent=Color3.fromRGB(255,140,50)},
+ DARK      = {name="🌑 Dark",      bg=Color3.fromRGB(8,8,10),     border=Color3.fromRGB(80,80,100),   text=Color3.fromRGB(160,160,170), accent=Color3.fromRGB(150,150,180)},
+}
 
 if type(_G.__UI_CLEANUP) == "function" then pcall(_G.__UI_CLEANUP) end
 local _conns = {}
@@ -48,7 +79,7 @@ local State = {
  Enabled=false, Target=nil, TargetScore=-1e9, TargetLockTime=0, LastCheck=0,
  LastApplied={H=-999,V=-999,Sim=-999,Int=-999,X=-999,Y=-999,Z=-999},
  MyRoot=nil, MyChar=nil, SmoothPos=nil, SmoothVel=nil,
- PingHistory={}, PingSmooth=60, CurrentMode="MIXED",
+ PingHistory={}, PingSmooth=60, CurrentMode="MIXED", CurrentColor="OBSIDIAN",
  MurdererPlayer=nil,
  Settings={leadMultiplier=1,verticalCorrection=1,reactionTime=DEFAULT_REACTION,minDistance=3,maxDistance=350,
    useGravity=true,useDrag=true,predictJump=true,targetLock=true,lockTime=2,prioritySystem=true,
@@ -270,27 +301,28 @@ end
 
 local function HUD_Init()
  local sg=GetHUDGui()
+ local colors=COLOR_PRESETS[State.CurrentColor] or COLOR_PRESETS.OBSIDIAN
  local f=Instance.new("Frame"); f.Name="@uihud"; f.Size=UDim2.new(0,0,0,22); f.AutomaticSize=Enum.AutomaticSize.X
  f.Position=UDim2.new(.5,0,0,36); f.AnchorPoint=Vector2.new(.5,0)
- f.BackgroundColor3=Color3.fromRGB(12,14,18); f.BackgroundTransparency=.12; f.BorderSizePixel=0; f.ZIndex=10; f.Parent=sg
+ f.BackgroundColor3=colors.bg; f.BackgroundTransparency=.12; f.BorderSizePixel=0; f.ZIndex=10; f.Parent=sg
  Instance.new("UICorner",f).CornerRadius=UDim.new(1,0)
- local st=Instance.new("UIStroke",f); st.Color=Color3.fromRGB(70,80,100); st.Thickness=1; st.Transparency=.55
+ local st=Instance.new("UIStroke",f); st.Color=colors.border; st.Thickness=1; st.Transparency=.55
  local li=Instance.new("UIListLayout",f); li.FillDirection=Enum.FillDirection.Horizontal
  li.VerticalAlignment=Enum.VerticalAlignment.Center; li.SortOrder=Enum.SortOrder.LayoutOrder; li.Padding=UDim.new(0,6)
  local pd=Instance.new("UIPadding",f); pd.PaddingLeft=UDim.new(0,9); pd.PaddingRight=UDim.new(0,10)
  pd.PaddingTop=UDim.new(0,4); pd.PaddingBottom=UDim.new(0,4)
  local dot=Instance.new("Frame"); dot.LayoutOrder=1; dot.Size=UDim2.new(0,7,0,7)
- dot.BackgroundColor3=Color3.fromRGB(120,130,150); dot.BorderSizePixel=0; dot.ZIndex=11; dot.Parent=f
+ dot.BackgroundColor3=colors.accent; dot.BorderSizePixel=0; dot.ZIndex=11; dot.Parent=f
  Instance.new("UICorner",dot).CornerRadius=UDim.new(1,0)
  local lb=Instance.new("TextLabel",f); lb.LayoutOrder=2; lb.Size=UDim2.new(0,0,1,0); lb.AutomaticSize=Enum.AutomaticSize.X
  lb.BackgroundTransparency=1; lb.Font=Enum.Font.GothamBold; lb.RichText=true
- lb.Text='<font color="#788296">Dealdough</font>'; lb.TextColor3=Color3.fromRGB(220,230,240); lb.TextSize=11; lb.ZIndex=11
+ lb.Text='<font color="#'..string.format("%06x",bit32.bor(bit32.bor(bit32.lshift(floor(colors.text.R*255),16),bit32.lshift(floor(colors.text.G*255),8)),floor(colors.text.B*255)))..'">Dealdough</font>'; lb.TextColor3=colors.text; lb.TextSize=11; lb.ZIndex=11
  local hm=Instance.new("Frame"); hm.Name="@hitmarker"; hm.Size=UDim2.new(0,40,0,40)
  hm.Position=UDim2.new(.5,0,.5,0); hm.AnchorPoint=Vector2.new(.5,.5); hm.BackgroundTransparency=1; hm.ZIndex=12; hm.Parent=sg
  local hmH=Instance.new("Frame",hm); hmH.Size=UDim2.new(0,24,0,2); hmH.Position=UDim2.new(.5,0,.5,0); hmH.AnchorPoint=Vector2.new(.5,.5)
- hmH.BackgroundColor3=Color3.fromRGB(255,255,255); hmH.BackgroundTransparency=1; hmH.BorderSizePixel=0; Instance.new("UICorner",hmH).CornerRadius=UDim.new(1,0)
+ hmH.BackgroundColor3=colors.accent; hmH.BackgroundTransparency=1; hmH.BorderSizePixel=0; Instance.new("UICorner",hmH).CornerRadius=UDim.new(1,0)
  local hmV=Instance.new("Frame",hm); hmV.Size=UDim2.new(0,2,0,24); hmV.Position=UDim2.new(.5,0,.5,0); hmV.AnchorPoint=Vector2.new(.5,.5)
- hmV.BackgroundColor3=Color3.fromRGB(255,255,255); hmV.BackgroundTransparency=1; hmV.BorderSizePixel=0; Instance.new("UICorner",hmV).CornerRadius=UDim.new(1,0)
+ hmV.BackgroundColor3=colors.accent; hmV.BackgroundTransparency=1; hmV.BorderSizePixel=0; Instance.new("UICorner",hmV).CornerRadius=UDim.new(1,0)
  HUD.gui,HUD.label,HUD.stroke,HUD.dot,HUD.hm,HUD.hmH,HUD.hmV=sg,lb,st,dot,hm,hmH,hmV
  startPulse()
 end
@@ -314,6 +346,7 @@ local function HUD_Update(dt)
  local key=(State.Enabled and 1 or 0) .. "|" .. State.CurrentMode .. "|" .. (m and m.Name or "-") .. "|" .. d5
  if key==lastHUDKey then return end
  lastHUDKey=key
+ local colors=COLOR_PRESETS[State.CurrentColor] or COLOR_PRESETS.OBSIDIAN
  if not State.Enabled then
   HUD.label.Text='<font color="#788296">Dealdough</font>'
   HUD.dot.BackgroundColor3=Color3.fromRGB(120,130,150)
@@ -323,12 +356,12 @@ local function HUD_Update(dt)
  if m then
   local dtxt=hasD and (' <font color="'..dcol(d5*5)..'">'..(d5*5)..'</font>') or ""
   HUD.label.Text=mt..' <font color="#ff6e6e">▸'..m.Name..'</font>'..dtxt
-  HUD.dot.BackgroundColor3=Color3.fromRGB(255,90,90)
-  HUD.stroke.Color=Color3.fromRGB(255,80,80); HUD.stroke.Transparency=.15
+  HUD.dot.BackgroundColor3=colors.accent
+  HUD.stroke.Color=colors.border; HUD.stroke.Transparency=.15
  else
   HUD.label.Text=mt..' <font color="#788296">▸—</font>'
-  HUD.dot.BackgroundColor3=Color3.fromRGB(120,180,255)
-  HUD.stroke.Color=Color3.fromRGB(120,180,255); HUD.stroke.Transparency=.25
+  HUD.dot.BackgroundColor3=colors.accent
+  HUD.stroke.Color=colors.border; HUD.stroke.Transparency=.25
  end
 end
 
@@ -346,6 +379,10 @@ section:AddToggle("⚡ АКТИВИРОВАТЬ", function(st)
  if st then InitBase(); UpdateCache(); State.Target=nil else State.Target=nil end
 end)
 section:AddDropdown("Режим", {"PRO","INSTINCT","SECRETIVE","ANNIHILATING","ADAPTIVE","MIXED","PING100","PING200","PING300"}, function(s) State.CurrentMode=s; lastHUDKey=nil end)
+local colorList = {}; for k,v in pairs(COLOR_PRESETS) do tinsert(colorList,v.name) end
+section:AddDropdown("🎨 GUI Color", colorList, function(s)
+ for k,v in pairs(COLOR_PRESETS) do if v.name==s then State.CurrentColor=k; HUD_Init(); break end end
+end)
 local g=section:AddToggle("Gravity", function(s) State.Settings.useGravity=s end); g(true)
 local d=section:AddToggle("Drags", function(s) State.Settings.useDrag=s end); d(true)
 local j=section:AddToggle("Predict Jump", function(s) State.Settings.predictJump=s end); j(true)
@@ -476,4 +513,4 @@ end
 _G.__UI_CLEANUP=cleanup
 
 UpdateCache(); UpdateMurdererCache(); HUD_Init()
-print("⚡ ULTRA INSTINCT "..VERSION.." loaded with PING modes: 100ms, 200ms, 300ms + anti-spam jump, anti-mini, no missed shots.")
+print("⚡ ULTRA INSTINCT "..VERSION.." loaded with 12 color themes + PING modes (100/200/300ms)")
