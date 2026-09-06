@@ -33,6 +33,9 @@ local MODES = {
  ANNIHILATING = {h_base=185,h_ping=.50,h_speed=0.02,v_base=175,v_ping=.30,v_dist=.35,sim_base=65,sim_speed=1.,int_base=20,int_speed=-.1,offX=-15,offY=-82,offZ=-1},
  ADAPTIVE     = {h_base=125,h_ping=.22,h_speed=0.02,v_base=125,v_ping=.14,v_dist=.18,sim_base=35,sim_speed=.4,int_base=50,int_speed=-.3,offX=-12,offY=-99,offZ=0,auto_switch=true},
  MIXED        = {h_base=120,h_ping=.28,h_speed=0.02,v_base=120,v_ping=.18,v_dist=.22,sim_base=45,sim_speed=.55,int_base=145,int_speed=-.18,offX=-6,offY=-95,offZ=-2,auto_switch=true,antiMini=true,antiSpamJump=true,noMissedShots=true,bodyShot=true},
+ PING100      = {h_base=210,h_ping=.40,h_speed=0.03,v_base=210,v_ping=.28,v_dist=.28,sim_base=95,sim_speed=.65,int_base=95,int_speed=-.10,offX=-13,offY=-110,offZ=-1,antiMini=true,antiSpamJump=true,noMissedShots=true,highPing=true},
+ PING200      = {h_base=240,h_ping=.55,h_speed=0.04,v_base=235,v_ping=.38,v_dist=.35,sim_base=110,sim_speed=.75,int_base=115,int_speed=-.05,offX=-16,offY=-125,offZ=-2,antiMini=true,antiSpamJump=true,noMissedShots=true,highPing=true},
+ PING300      = {h_base=270,h_ping=.70,h_speed=0.05,v_base=265,v_ping=.48,v_dist=.42,sim_base=128,sim_speed=.85,int_base=135,int_speed=0,offX=-20,offY=-140,offZ=-3,antiMini=true,antiSpamJump=true,noMissedShots=true,highPing=true},
 }
 local ASUB = {
  CLOSE={h_base=170,h_ping=.30,h_speed=0.2,v_base=160,v_ping=.20,v_dist=.24,sim_base=50,sim_speed=.55,int_base=45,int_speed=-5,offX=-6,offY=-65,offZ=0},
@@ -342,7 +345,7 @@ section:AddToggle("⚡ АКТИВИРОВАТЬ", function(st)
  State.Enabled=st
  if st then InitBase(); UpdateCache(); State.Target=nil else State.Target=nil end
 end)
-section:AddDropdown("Режим", {"PRO","INSTINCT","SECRETIVE","ANNIHILATING","ADAPTIVE","MIXED"}, function(s) State.CurrentMode=s; lastHUDKey=nil end)
+section:AddDropdown("Режим", {"PRO","INSTINCT","SECRETIVE","ANNIHILATING","ADAPTIVE","MIXED","PING100","PING200","PING300"}, function(s) State.CurrentMode=s; lastHUDKey=nil end)
 local g=section:AddToggle("Gravity", function(s) State.Settings.useGravity=s end); g(true)
 local d=section:AddToggle("Drags", function(s) State.Settings.useDrag=s end); d(true)
 local j=section:AddToggle("Predict Jump", function(s) State.Settings.predictJump=s end); j(true)
@@ -353,7 +356,7 @@ section:AddButton("Статистика (F9)", function()
  local ac = s.Shots > 0 and string.format("%.1f%%", (s.Hits / s.Shots) * 100) or "-"
  print("══ ULTRA INSTINCT ══  Shots:"..s.Shots.." Hits:"..s.Hits.." Acc:"..ac..
        " Kills:"..s.Kills.." Deaths:"..s.Deaths.." Streak:"..s.CurrentStreak.."/"..s.BestStreak..
-       " Mode:"..(State.CurrentMode or "-"))
+       " Mode:"..(State.CurrentMode or "-").." Ping:"..floor(State.PingSmooth).."ms")
 end)
 
 -- ====== MAIN LOOP (REAL-TIME IDLE & ENGAGED AUTO-CONFIG) ======
@@ -371,7 +374,7 @@ local function tick(dt)
  local myR=State.MyRoot; local myP=myR and myR.Position
 
  -- Feature Detection
- local isMiniTarget = (mk=="MIXED") and mode.antiMini and (IsMiniAvatar(target) or IsMiniAvatar(State.MurdererPlayer))
+ local isMiniTarget = (mode.antiMini) and (IsMiniAvatar(target) or IsMiniAvatar(State.MurdererPlayer))
  local isSpamJumping = (mode.antiSpamJump and target) and DetectSpamJump(mR and mR.AssemblyLinearVelocity or nil)
 
  -- IDLE FALLBACK
@@ -414,8 +417,8 @@ local function tick(dt)
  
  -- Anti-Spam Jump Detection
  if isSpamJumping then
-  vL=vL+45
-  yO=yO+5
+  vL=vL+55
+  yO=yO+7
  elseif State.Settings.predictJump then 
   local vs=sv.Y; if vs>3 then vL=vL+35; yO=yO+3 elseif vs<-8 then vL=vL-25; yO=yO-4 end 
  end
@@ -473,4 +476,4 @@ end
 _G.__UI_CLEANUP=cleanup
 
 UpdateCache(); UpdateMurdererCache(); HUD_Init()
-print("⚡ ULTRA INSTINCT "..VERSION.." loaded with enhanced modes: PRO, INSTINCT, and MIXED.")
+print("⚡ ULTRA INSTINCT "..VERSION.." loaded with PING modes: 100ms, 200ms, 300ms + anti-spam jump, anti-mini, no missed shots.")
