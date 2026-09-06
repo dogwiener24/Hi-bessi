@@ -58,12 +58,12 @@ local _conns = {}
 local function track(c) _conns[#_conns+1] = c; return c end
 
 local MODES = {
- PRO          = {h_base=185,h_ping=.25,h_speed=0.01,v_base=175,v_ping=.16,v_dist=.16,sim_base=72,sim_speed=.35,int_base=65,int_speed=-.25,offX=-8,offY=-102,offZ=0,antiSpamJump=true},
- INSTINCT     = {h_base=200,h_ping=.32,h_speed=0.02,v_base=190,v_ping=.20,v_dist=.24,sim_base=85,sim_speed=.55,int_base=80,int_speed=-.15,offX=-11,offY=-104,offZ=0,antiSpamJump=true,noMissedShots=true},
- SECRETIVE    = {h_base=105,h_ping=.15,h_speed=0.02,v_base=105,v_ping=.10,v_dist=.12,sim_base=28,sim_speed=.2,int_base=60,int_speed=-.4,offX=12,offY=-78,offZ=-1},
+ one shot dealdough          = {h_base=185,h_ping=.25,h_speed=0.01,v_base=175,v_ping=.16,v_dist=.16,sim_base=72,sim_speed=.35,int_base=65,int_speed=-.25,offX=-8,offY=-102,offZ=0,antiSpamJump=true},
+ dealdough maker    = {h_base=200,h_ping=.32,h_speed=0.02,v_base=190,v_ping=.20,v_dist=.24,sim_base=85,sim_speed=.55,int_base=80,int_speed=-.15,offX=-11,offY=-104,offZ=0,antiSpamJump=true,noMissedShots=true},
+ kissing penis   = {h_base=105,h_ping=.15,h_speed=0.02,v_base=105,v_ping=.10,v_dist=.12,sim_base=28,sim_speed=.2,int_base=60,int_speed=-.4,offX=12,offY=-78,offZ=-1},
  ANNIHILATING = {h_base=185,h_ping=.50,h_speed=0.02,v_base=175,v_ping=.30,v_dist=.35,sim_base=65,sim_speed=1.,int_base=20,int_speed=-.1,offX=-15,offY=-82,offZ=-1},
  ADAPTIVE     = {h_base=125,h_ping=.22,h_speed=0.02,v_base=125,v_ping=.14,v_dist=.18,sim_base=35,sim_speed=.4,int_base=50,int_speed=-.3,offX=-12,offY=-99,offZ=0,auto_switch=true},
- MIXED        = {h_base=120,h_ping=.28,h_speed=0.02,v_base=120,v_ping=.18,v_dist=.22,sim_base=45,sim_speed=.55,int_base=145,int_speed=-.18,offX=-6,offY=-95,offZ=-2,auto_switch=true,antiMini=true,antiSpamJump=true,noMissedShots=true,bodyShot=true},
+ big jumbo        = {h_base=120,h_ping=.28,h_speed=0.02,v_base=120,v_ping=.18,v_dist=.22,sim_base=45,sim_speed=.55,int_base=145,int_speed=-.18,offX=-6,offY=-95,offZ=-2,auto_switch=true,antiMini=true,antiSpamJump=true,noMissedShots=true,bodyShot=true},
  PING100      = {h_base=210,h_ping=.40,h_speed=0.03,v_base=210,v_ping=.28,v_dist=.28,sim_base=95,sim_speed=.65,int_base=95,int_speed=-.10,offX=-13,offY=-110,offZ=-1,antiMini=true,antiSpamJump=true,noMissedShots=true,highPing=true},
  PING200      = {h_base=240,h_ping=.55,h_speed=0.04,v_base=235,v_ping=.38,v_dist=.35,sim_base=110,sim_speed=.75,int_base=115,int_speed=-.05,offX=-16,offY=-125,offZ=-2,antiMini=true,antiSpamJump=true,noMissedShots=true,highPing=true},
  PING300      = {h_base=270,h_ping=.70,h_speed=0.05,v_base=265,v_ping=.48,v_dist=.42,sim_base=128,sim_speed=.85,int_base=135,int_speed=0,offX=-20,offY=-140,offZ=-3,antiMini=true,antiSpamJump=true,noMissedShots=true,highPing=true},
