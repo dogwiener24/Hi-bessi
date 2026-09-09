@@ -33,12 +33,16 @@ local MODES = {
  ANNIHILATING = {h_base=185,h_ping=.50,h_speed=0.02,v_base=175,v_ping=.30,v_dist=.35,sim_base=65,sim_speed=1.,int_base=20,int_speed=-.1,offX=-15,offY=-82,offZ=-1},
  ADAPTIVE     = {h_base=125,h_ping=.22,h_speed=0.02,v_base=125,v_ping=.14,v_dist=.18,sim_base=35,sim_speed=.4,int_base=50,int_speed=-.3,offX=-12,offY=-99,offZ=0,auto_switch=true},
  MIXED        = {h_base=120,h_ping=.28,h_speed=0.02,v_base=120,v_ping=.18,v_dist=.22,sim_base=45,sim_speed=.55,int_base=68,int_speed=-.18,offX=-12,offY=-95,offZ=-1,auto_switch=true,antiMini=true,antiSpam=true,noMissed=true,bodyShot=true,desc="Anti-Mini + Body Shot"},
+ PING100      = {h_base=190,h_ping=.48,h_speed=0.03,v_base=185,v_ping=.35,v_dist=.28,sim_base=90,sim_speed=.60,int_base=70,int_speed=-.15,offX=-14,offY=-110,offZ=0,noMissed=true,antiSpam=true,bodyShot=true,desc="Optimized for 100+ ms Ping"},
+ PING200      = {h_base=210,h_ping=.65,h_speed=0.04,v_base=200,v_ping=.50,v_dist=.35,sim_base=100,sim_speed=.70,int_base=75,int_speed=-.10,offX=-16,offY=-125,offZ=0,noMissed=true,antiSpam=true,bodyShot=true,desc="Optimized for 200+ ms Ping"},
+ PING300_400  = {h_base=240,h_ping=.92,h_speed=0.05,v_base=225,v_ping=.72,v_dist=.45,sim_base=115,sim_speed=.85,int_base=80,int_speed=-.05,offX=-18,offY=-140,offZ=0,noMissed=true,antiSpam=true,bodyShot=true,desc="Ultra Compensation for 300-400 ms Ping"},
 }
 local ASUB = {
  CLOSE={h_base=100,h_ping=.30,h_speed=0.2,v_base=147,v_ping=.20,v_dist=.24,sim_base=50,sim_speed=.55,int_base=45,int_speed=-5,offX=-6,offY=-65,offZ=0},
  MID  ={h_base=199,h_ping=.24,h_speed=0.0,v_base=150,v_ping=.16,v_dist=.20,sim_base=58,sim_speed=.45,int_base=85,int_speed=-3.5,offX=-11,offY=-148,offZ=-1},
  SNIP ={h_base=201, h_ping=.12,h_speed=0.2, v_base=129, v_ping=.10,v_dist=.12,sim_base=62,sim_speed=.18,int_base=78,int_speed=-4.5,offX=-12,offY=-176,offZ=-1},
  DEF  ={h_base=102,h_ping=.17,h_speed=0.2,v_base=167,v_ping=.12,v_dist=.14,sim_base=38,sim_speed=.25,int_base=32,int_speed=-3.8,offX=-3,offY=-87,offZ=0},
+ HIGH_PING_MID={h_base=225,h_ping=.75,h_speed=0.03,v_base=210,v_ping=.58,v_dist=.38,sim_base=105,sim_speed=.75,int_base=78,int_speed=-.10,offX=-15,offY=-130,offZ=0,noMissed=true,antiSpam=true,bodyShot=true},
 }
 
 local State = {
@@ -342,7 +346,7 @@ section:AddToggle("⚡ АКТИВИРОВАТЬ", function(st)
  State.Enabled=st
  if st then InitBase(); UpdateCache(); State.Target=nil else State.Target=nil end
 end)
-section:AddDropdown("Режим", {"PRO","INSTINCT","SECRETIVE","ANNIHILATING","ADAPTIVE","MIXED"}, function(s) State.CurrentMode=s; lastHUDKey=nil end)
+section:AddDropdown("Режим", {"PRO","INSTINCT","SECRETIVE","ANNIHILATING","ADAPTIVE","MIXED","PING100","PING200","PING300_400"}, function(s) State.CurrentMode=s; lastHUDKey=nil end)
 local g=section:AddToggle("Gravity", function(s) State.Settings.useGravity=s end); g(true)
 local d=section:AddToggle("Drags", function(s) State.Settings.useDrag=s end); d(true)
 local j=section:AddToggle("Predict Jump", function(s) State.Settings.predictJump=s end); j(true)
@@ -364,71 +368,68 @@ local function tick(dt)
 
  local rp=LocalPlayer:GetNetworkPing()*1000; if rp<=0 then rp=State.PingSmooth or 100 end; local ping=SmoothPing(rp)
  local mk=State.CurrentMode; local mode=MODES[mk] or MODES.ADAPTIVE
- if (mk=="ADAPTIVE" or mk=="MIXED") and mode.auto_switch then mode=ASUB.MID end
 
- local target=FindBestTarget()
- local mR=target and GetRoot(target)
- local myR=State.MyRoot; local myP=myR and myR.Position
-
- -- Feature Detection
- local isMiniTarget = (mode.antiMini) and (IsMiniAvatar(target) or IsMiniAvatar(State.MurdererPlayer))
- local isSpamJumping = (mode.antiSpam and target) and DetectSpamJump(mR and mR.AssemblyLinearVelocity or nil)
-
- -- IDLE FALLBACK
- if not target or not mR or not myP then
-  State.Target=nil; DecayAdaptive()
-  local idleH_base = isMiniTarget and 100 or mode.h_base
-  local idleOffY = isMiniTarget and -88 or mode.offY
-  local idleH=clamp(floor(idleH_base + ping*mode.h_ping), 80, 500)
-  local idleV=clamp(floor(mode.v_base + ping*mode.v_ping), 80, 450)
-  ApplyGPL(floor(mode.sim_base), floor(mode.int_base), mode.offX, idleOffY, mode.offZ, idleH, idleV)
-  return
- end
-
- local mP=mR.Position; local dist=(mP-myP).Magnitude
- if dist<State.Settings.minDistance or dist>State.Settings.maxDistance then
-  State.Target=nil; DecayAdaptive()
-  local idleH_base = isMiniTarget and 100 or mode.h_base
-  local idleOffY = isMiniTarget and -88 or mode.offY
-  local idleH=clamp(floor(idleH_base + ping*mode.h_ping), 80, 500)
-  local idleV=clamp(floor(mode.v_base + ping*mode.v_ping), 80, 450)
-  ApplyGPL(floor(mode.sim_base), floor(mode.int_base), mode.offX, idleOffY, mode.offZ, idleH, idleV)
-  return
- end
-
- local sp,sv=SmoothData(mR,dt); if not sp then return end
- local delta=CalculateLead(sp,sv,myP,ping,dist)
- local lx=clamp(delta.X*.02,-6,6); local ly=clamp(delta.Y*.02,-6,6); local lz=clamp(delta.Z*.02,-6,6)
- if State.Settings.adaptiveLead then AdaptiveCorrection(delta) end
- local ad=State.AdaptiveOffset
+ -- Dynamic Ping Auto-Switching for Adaptive Mode
  if (mk=="ADAPTIVE" or mk=="MIXED") and mode.auto_switch then
-  if dist<30 then mode=ASUB.CLOSE elseif dist<80 then mode=ASUB.MID elseif dist<150 then mode=ASUB.SNIP else mode=ASUB.DEF end
+  if ping >= 300 then
+   mode = MODES.PING300_400
+  elseif ping >= 180 then
+   mode = MODES.PING200
+  elseif ping >= 90 then
+   mode = MODES.PING100
+  else
+   mode = ASUB.MID
+  end
  end
 
- local cur_h_base = isMiniTarget and 100 or mode.h_base
- local cur_offY   = isMiniTarget and -88 or mode.offY
+ local target = FindBestTarget()
+ if not target then DecayAdaptive(); return end
+ local tr = GetRoot(target)
+ if not tr then DecayAdaptive(); return end
 
- local mult=State.Settings.leadMultiplier; local vc=State.Settings.verticalCorrection; local speed=sv.Magnitude
- local hL=clamp((cur_h_base+ping*mode.h_ping+speed*mode.h_speed+lx*2)*mult+ad.x*3,80,500)
- local vL=clamp((mode.v_base+ping*mode.v_ping+dist*mode.v_dist+ly*2)*vc+ad.y*3,80,450); local yO=0
+ local sp, sv = SmoothData(tr, dt)
+ local mp = State.MyRoot.Position
+ local dist = (sp - mp).Magnitude
+ if dist < State.Settings.minDistance or dist > State.Settings.maxDistance then return end
+
+ local lead = CalculateLead(sp, sv, mp, ping, dist)
+ local lx, ly, lz = lead.X, lead.Y, lead.Z
+ local speed = sv.Magnitude
+ local isSpamJumping = DetectSpamJump(sv)
+
+ local lc = State.Settings.leadMultiplier
+ local vc = State.Settings.verticalCorrection
+ local ad = State.AdaptiveOffset
+
+ local cur_offY = mode.offY
+ local hL = clamp((mode.h_base + ping*mode.h_ping + speed*mode.h_speed)*lc + ad.x*3, 50, 500)
+ local vL = clamp((mode.v_base + ping*mode.v_ping + dist*mode.v_dist + ly*2)*vc + ad.y*3, 80, 500)
+ local yO = 0
  
  -- Anti-Spam Jump Detection
  if isSpamJumping then
-  vL=vL+55
-  yO=yO+7
+  vL = vL + 55
+  yO = yO + 7
  elseif State.Settings.predictJump then 
-  local vs=sv.Y; if vs>3 then vL=vL+35; yO=yO+3 elseif vs<-8 then vL=vL-25; yO=yO-4 end 
+  local vs = sv.Y
+  if vs > 3 then vL = vL + 35; yO = yO + 3
+  elseif vs < -8 then vL = vL - 25; yO = yO - 4 end 
  end
  
- -- Body Shot Adjustment
+ -- Body Shot & Anti-Miss Correction
+ if mode.noMissed then
+  hL = hL * 1.05
+ end
  local bodyAdjust = (mode.bodyShot and 18) or 0
  vL = vL - bodyAdjust
 
- local sim=clamp(mode.sim_base+speed*mode.sim_speed+abs(lx)*.5+abs(ad.x)*.2,15,130)
- local intv=clamp(mode.int_base+speed*mode.int_speed-abs(lx)*.3-abs(ad.x)*.1,5,120)
- local oX=mode.offX+lx*.5+ad.x; local oY=cur_offY+ly*.5+yO+ad.y; local oZ=mode.offZ+lz*.5+ad.z
+ local sim = clamp(mode.sim_base + speed*mode.sim_speed + abs(lx)*.5 + abs(ad.x)*.2, 15, 150)
+ local intv = clamp(mode.int_base + speed*mode.int_speed - abs(lx)*.3 - abs(ad.x)*.1, 5, 120)
+ local oX = mode.offX + lx*.5 + ad.x
+ local oY = cur_offY + ly*.5 + yO + ad.y
+ local oZ = mode.offZ + lz*.5 + ad.z
 
- ApplyGPL(floor(sim),floor(intv),floor(oX),floor(oY),floor(oZ),floor(hL),floor(vL))
+ ApplyGPL(floor(sim), floor(intv), floor(oX), floor(oY), floor(oZ), floor(hL), floor(vL))
 end
 
 track(RunService.Heartbeat:Connect(function(dt)
