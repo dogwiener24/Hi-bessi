@@ -28,21 +28,21 @@ local function track(c) _conns[#_conns+1] = c; return c end
 
 local MODES = {
  PRO          = {h_base=185,h_ping=.25,h_speed=0.01,v_base=175,v_ping=.16,v_dist=.16,sim_base=72,sim_speed=.35,int_base=65,int_speed=-.25,offX=-8,offY=-102,offZ=0,desc="Pro Shot"},
- INSTINCT     = {h_base=167,h_ping=.32,h_speed=0.02,v_base=190,v_ping=.20,v_dist=.24,sim_base=85,sim_speed=.55,int_base=67,int_speed=-.15,offX=-11,offY=-104,offZ=0,noMissed=true,antiSpam=true,desc="No Missed + Anti-Spam"},
+ INSTINCT     = {h_base=140,h_ping=.32,h_speed=0.02,v_base=145,v_ping=.20,v_dist=.24,sim_base=32,sim_speed=.55,int_base=104,int_speed=-.15,offX=-4,offY=-78,offZ=-1,noMissed=true,antiSpam=true,desc="No Missed + Anti-Spam"},
  SECRETIVE    = {h_base=105,h_ping=.15,h_speed=0.02,v_base=105,v_ping=.10,v_dist=.12,sim_base=28,sim_speed=.2,int_base=60,int_speed=-.4,offX=12,offY=-78,offZ=-1},
  ANNIHILATING = {h_base=185,h_ping=.50,h_speed=0.02,v_base=175,v_ping=.30,v_dist=.35,sim_base=65,sim_speed=1.,int_base=20,int_speed=-.1,offX=-15,offY=-82,offZ=-1},
  ADAPTIVE     = {h_base=125,h_ping=.22,h_speed=0.02,v_base=125,v_ping=.14,v_dist=.18,sim_base=35,sim_speed=.4,int_base=50,int_speed=-.3,offX=-12,offY=-99,offZ=0,auto_switch=true},
  MIXED        = {h_base=120,h_ping=.28,h_speed=0.02,v_base=120,v_ping=.18,v_dist=.22,sim_base=45,sim_speed=.55,int_base=68,int_speed=-.18,offX=-12,offY=-95,offZ=-1,auto_switch=true,antiMini=true,antiSpam=true,noMissed=true,bodyShot=true,desc="Anti-Mini + Body Shot"},
- PING100      = {h_base=190,h_ping=.48,h_speed=0.03,v_base=185,v_ping=.35,v_dist=.28,sim_base=90,sim_speed=.60,int_base=70,int_speed=-.15,offX=-14,offY=-110,offZ=0,noMissed=true,antiSpam=true,bodyShot=true,desc="Optimized for 100+ ms Ping"},
- PING200      = {h_base=210,h_ping=.65,h_speed=0.04,v_base=200,v_ping=.50,v_dist=.35,sim_base=100,sim_speed=.70,int_base=75,int_speed=-.10,offX=-16,offY=-125,offZ=0,noMissed=true,antiSpam=true,bodyShot=true,desc="Optimized for 200+ ms Ping"},
- PING300_400  = {h_base=240,h_ping=.92,h_speed=0.05,v_base=225,v_ping=.72,v_dist=.45,sim_base=115,sim_speed=.85,int_base=80,int_speed=-.05,offX=-18,offY=-140,offZ=0,noMissed=true,antiSpam=true,bodyShot=true,desc="Ultra Compensation for 300-400 ms Ping"},
+ PING100      = {h_base=160,h_ping=.48,h_speed=0.03,v_base=156,v_ping=.35,v_dist=.28,sim_base=74,sim_speed=.60,int_base=128,int_speed=-.15,offX=-10,offY=-90,offZ=-1,noMissed=true,antiSpam=true,bodyShot=true,desc="Optimized for 100+ ms Ping"},
+ PING200      = {h_base=116,h_ping=.65,h_speed=0.04,v_base=132,v_ping=.50,v_dist=.35,sim_base=44,sim_speed=.70,int_base=132,int_speed=-.10,offX=-20,offY=-68,offZ=-1,noMissed=true,antiSpam=true,bodyShot=true,desc="Optimized for 200+ ms Ping"},
+ PING300_400  = {h_base=115,h_ping=.92,h_speed=0.05,v_base=115,v_ping=.72,v_dist=.45,sim_base=40,sim_speed=.85,int_base=138,int_speed=-.05,offX=-4,offY=-78,offZ=-1,noMissed=true,antiSpam=true,bodyShot=true,desc="Ultra Compensation for 300-400 ms Ping"},
 }
 local ASUB = {
- CLOSE={h_base=100,h_ping=.30,h_speed=0.2,v_base=147,v_ping=.20,v_dist=.24,sim_base=50,sim_speed=.55,int_base=45,int_speed=-5,offX=-6,offY=-65,offZ=0},
+ CLOSE={h_base=115,h_ping=.30,h_speed=0.2,v_base=115,v_ping=.20,v_dist=.24,sim_base=40,sim_speed=.55,int_base=138,int_speed=-5,offX=-5,offY=-68,offZ=-2},
  MID  ={h_base=199,h_ping=.24,h_speed=0.0,v_base=150,v_ping=.16,v_dist=.20,sim_base=58,sim_speed=.45,int_base=85,int_speed=-3.5,offX=-11,offY=-148,offZ=-1},
- SNIP ={h_base=201, h_ping=.12,h_speed=0.2, v_base=129, v_ping=.10,v_dist=.12,sim_base=62,sim_speed=.18,int_base=78,int_speed=-4.5,offX=-12,offY=-176,offZ=-1},
+ SNIP ={h_base=198, h_ping=.12,h_speed=0.2, v_base=190, v_ping=.10,v_dist=.12,sim_base=56,sim_speed=.18,int_base=125,int_speed=-4.5,offX=-7,offY=-90,offZ=-1},
  DEF  ={h_base=102,h_ping=.17,h_speed=0.2,v_base=167,v_ping=.12,v_dist=.14,sim_base=38,sim_speed=.25,int_base=32,int_speed=-3.8,offX=-3,offY=-87,offZ=0},
- HIGH_PING_MID={h_base=225,h_ping=.75,h_speed=0.03,v_base=210,v_ping=.58,v_dist=.38,sim_base=105,sim_speed=.75,int_base=78,int_speed=-.10,offX=-15,offY=-130,offZ=0,noMissed=true,antiSpam=true,bodyShot=true},
+ HIGH_PING_MID={h_base=155,h_ping=.75,h_speed=0.03,v_base=115,v_ping=.58,v_dist=.38,sim_base=35,sim_speed=.75,int_base=90,int_speed=-.10,offX=30,offY=-89,offZ=0,noMissed=true,antiSpam=true,bodyShot=true},
 }
 
 local State = {
