@@ -28,7 +28,7 @@ local function track(c) _conns[#_conns+1] = c; return c end
 
 local MODES = {
  PRO          = {h_base=185,h_ping=.25,h_speed=0.01,v_base=175,v_ping=.16,v_dist=.16,sim_base=72,sim_speed=.35,int_base=65,int_speed=-.25,offX=-8,offY=-102,offZ=0,desc="Pro Shot"},
- INSTINCT     = {h_base=140,h_ping=.32,h_speed=0.02,v_base=145,v_ping=.20,v_dist=.24,sim_base=32,sim_speed=.55,int_base=104,int_speed=-.15,offX=-4,offY=-78,offZ=-1,noMissed=true,antiSpam=true,desc="No Missed + Anti-Spam"},
+ INSTINCT     = {h_base=192,h_ping=.32,h_speed=0.02,v_base=184,v_ping=.20,v_dist=.24,sim_base=50,sim_speed=.55,int_base=74,int_speed=-.15,offX=-9,offY=-51,offZ=-1,noMissed=true,antiSpam=true,desc="No Missed + Anti-Spam"},
  SECRETIVE    = {h_base=105,h_ping=.15,h_speed=0.02,v_base=105,v_ping=.10,v_dist=.12,sim_base=28,sim_speed=.2,int_base=60,int_speed=-.4,offX=12,offY=-78,offZ=-1},
  ANNIHILATING = {h_base=185,h_ping=.50,h_speed=0.02,v_base=175,v_ping=.30,v_dist=.35,sim_base=65,sim_speed=1.,int_base=20,int_speed=-.1,offX=-15,offY=-82,offZ=-1},
  ADAPTIVE     = {h_base=125,h_ping=.22,h_speed=0.02,v_base=125,v_ping=.14,v_dist=.18,sim_base=35,sim_speed=.4,int_base=50,int_speed=-.3,offX=-12,offY=-99,offZ=0,auto_switch=true},
