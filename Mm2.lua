@@ -18,7 +18,7 @@ local V3 = Vector3.new
 
 local VERSION = "24.8.2 PERF"
 local GRAVITY, BULLET_SPEED = 196.2, 10000
-local DEFAULT_REACTION, ADAPTIVE_GAIN, MAX_ADAPT = 0.01, 0.05, 5.0
+local DEFAULT_REACTION, ADAPTIVE_GAIN, MAX_ADAPT = 0, 0.05, 8.0
 local MAX_THREAT, HYSTERESIS, HIT_WINDOW, DEAD_ZONE = 500, 15, 0.6, 0.2
 local MURDERER_SCAN = 0.001
 
@@ -27,21 +27,21 @@ local _conns = {}
 local function track(c) _conns[#_conns+1] = c; return c end
 
 local MODES = {
- PRO          = {h_base=185,h_ping=.25,h_speed=0.01,v_base=175,v_ping=.16,v_dist=.16,sim_base=72,sim_speed=.35,int_base=65,int_speed=-.25,offX=-8,offY=-102,offZ=0,desc="Pro Shot"},
- INSTINCT     = {h_base=192,h_ping=.32,h_speed=0.02,v_base=184,v_ping=.20,v_dist=.24,sim_base=50,sim_speed=.55,int_base=74,int_speed=-.15,offX=-9,offY=-51,offZ=-1,noMissed=true,antiSpam=true,desc="No Missed + Anti-Spam"},
- SECRETIVE    = {h_base=105,h_ping=.15,h_speed=0.02,v_base=105,v_ping=.10,v_dist=.12,sim_base=28,sim_speed=.2,int_base=60,int_speed=-.4,offX=12,offY=-78,offZ=-1},
+ PRO          = {h_base=90,h_ping=.25,h_speed=0.01,v_base=175,v_ping=.16,v_dist=.16,sim_base=72,sim_speed=.35,int_base=65,int_speed=-.25,offX=-8,offY=-102,offZ=0,desc="Pro Shot"},
+ INSTINCT     = {h_base=90,h_ping=.32,h_speed=0.02,v_base=184,v_ping=.20,v_dist=.24,sim_base=50,sim_speed=.55,int_base=74,int_speed=-.15,offX=-9,offY=-51,offZ=-1,noMissed=true,antiSpam=true,desc="No Missed + Anti-Spam"},
+ SECRETIVE    = {h_base=90,h_ping=.15,h_speed=0.02,v_base=105,v_ping=.10,v_dist=.12,sim_base=28,sim_speed=.2,int_base=60,int_speed=-.4,offX=12,offY=-78,offZ=-1},
  ANNIHILATING = {h_base=185,h_ping=.50,h_speed=0.02,v_base=175,v_ping=.30,v_dist=.35,sim_base=65,sim_speed=1.,int_base=20,int_speed=-.1,offX=-15,offY=-82,offZ=-1},
  ADAPTIVE     = {h_base=125,h_ping=.22,h_speed=0.02,v_base=125,v_ping=.14,v_dist=.18,sim_base=35,sim_speed=.4,int_base=50,int_speed=-.3,offX=-12,offY=-99,offZ=0,auto_switch=true},
  MIXED        = {h_base=120,h_ping=.28,h_speed=0.02,v_base=120,v_ping=.18,v_dist=.22,sim_base=45,sim_speed=.55,int_base=68,int_speed=-.18,offX=-12,offY=-95,offZ=-1,auto_switch=true,antiMini=true,antiSpam=true,noMissed=true,bodyShot=true,desc="Anti-Mini + Body Shot"},
- PING100      = {h_base=186,h_ping=.48,h_speed=0.03,v_base=179,v_ping=.35,v_dist=.28,sim_base=73,sim_speed=.60,int_base=64,int_speed=-.15,offX=-6,offY=-26,offZ=0,noMissed=true,antiSpam=true,bodyShot=true,desc="Optimized for 100+ ms Ping"},
- PING200      = {h_base=176,h_ping=.65,h_speed=0.04,v_base=170,v_ping=.50,v_dist=.35,sim_base=66,sim_speed=.70,int_base=59,int_speed=-.10,offX=-6,offY=-57,offZ=0,noMissed=true,antiSpam=true,bodyShot=true,desc="Optimized for 200+ ms Ping"},
- PING300_400  = {h_base=177,h_ping=.92,h_speed=0.05,v_base=177,v_ping=.72,v_dist=.45,sim_base=70,sim_speed=.85,int_base=72,int_speed=-.05,offX=-10,offY=-67,offZ=0,noMissed=true,antiSpam=true,bodyShot=true,desc="Ultra Compensation for 300-400 ms Ping"},
+ PING100      = {h_base=90,h_ping=.48,h_speed=0.03,v_base=179,v_ping=.35,v_dist=.28,sim_base=73,sim_speed=.60,int_base=64,int_speed=-.15,offX=-6,offY=-26,offZ=0,noMissed=true,antiSpam=true,bodyShot=true,desc="Optimized for 100+ ms Ping"},
+ PING200      = {h_base=90,h_ping=.65,h_speed=0.04,v_base=170,v_ping=.50,v_dist=.35,sim_base=66,sim_speed=.70,int_base=59,int_speed=-.10,offX=-6,offY=-57,offZ=0,noMissed=true,antiSpam=true,bodyShot=true,desc="Optimized for 200+ ms Ping"},
+ PING300_400  = {h_base=90,h_ping=.92,h_speed=0.05,v_base=177,v_ping=.72,v_dist=.45,sim_base=70,sim_speed=.85,int_base=72,int_speed=-.05,offX=-10,offY=-67,offZ=0,noMissed=true,antiSpam=true,bodyShot=true,desc="Ultra Compensation for 300-400 ms Ping"},
 }
 local ASUB = {
- CLOSE={h_base=115,h_ping=.30,h_speed=0.2,v_base=115,v_ping=.20,v_dist=.24,sim_base=40,sim_speed=.55,int_base=138,int_speed=-5,offX=-5,offY=-68,offZ=-2},
- MID  ={h_base=199,h_ping=.24,h_speed=0.0,v_base=150,v_ping=.16,v_dist=.20,sim_base=58,sim_speed=.45,int_base=85,int_speed=-3.5,offX=-11,offY=-148,offZ=-1},
- SNIP ={h_base=198, h_ping=.12,h_speed=0.2, v_base=190, v_ping=.10,v_dist=.12,sim_base=56,sim_speed=.18,int_base=125,int_speed=-4.5,offX=-7,offY=-90,offZ=-1},
- DEF  ={h_base=178,h_ping=.17,h_speed=0.2,v_base=172,v_ping=.12,v_dist=.14,sim_base=68,sim_speed=.25,int_base=57,int_speed=-3.8,offX=-6,offY=-45,offZ=0},
+ CLOSE={h_base=90,h_ping=.30,h_speed=0.2,v_base=115,v_ping=.20,v_dist=.24,sim_base=40,sim_speed=.55,int_base=138,int_speed=-5,offX=-5,offY=-68,offZ=-2},
+ MID  ={h_base=91,h_ping=.24,h_speed=0.0,v_base=150,v_ping=.16,v_dist=.20,sim_base=58,sim_speed=.45,int_base=85,int_speed=-3.5,offX=-11,offY=-148,offZ=-1},
+ SNIP ={h_base=90, h_ping=.12,h_speed=0.2, v_base=190, v_ping=.10,v_dist=.12,sim_base=56,sim_speed=.18,int_base=125,int_speed=-4.5,offX=-7,offY=-90,offZ=-1},
+ DEF  ={h_base=91,h_ping=.17,h_speed=0.2,v_base=172,v_ping=.12,v_dist=.14,sim_base=68,sim_speed=.25,int_base=57,int_speed=-3.8,offX=-6,offY=-45,offZ=0},
  HIGH_PING_MID={h_base=155,h_ping=.75,h_speed=0.03,v_base=115,v_ping=.58,v_dist=.38,sim_base=35,sim_speed=.75,int_base=90,int_speed=-.10,offX=30,offY=-89,offZ=0,noMissed=true,antiSpam=true,bodyShot=true},
 }
 
