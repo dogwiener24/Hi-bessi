@@ -333,8 +333,11 @@ local function HUD_Update(dt)
  end
 end
 
--- ====== MENU SETUP ======
-local section=shared and shared.AddSection and shared.AddSection("⚡ ULTRA INSTINCT "..VERSION) or nil
+-- ====== MENU SETUP (UPDATED OVERDRIVE H PLUGIN API) ======
+local tab = (shared and shared.CreateTab) and shared.CreateTab("Ultra Instinct", "rbxassetid://6031280882") or nil
+local section = (tab and tab.AddSection) and tab:AddSection("⚡ ULTRA INSTINCT " .. VERSION, "PERFORMANCE MODE") 
+    or (shared and shared.AddSection and shared.AddSection("⚡ ULTRA INSTINCT "..VERSION)) or nil
+
 if not section then
   section = {
     AddToggle = function() return function() end end,
@@ -342,16 +345,19 @@ if not section then
     AddButton = function() return function() end end,
   }
 end
+
 section:AddToggle("⚡ АКТИВИРОВАТЬ", function(st)
  State.Enabled=st
  if st then InitBase(); UpdateCache(); State.Target=nil else State.Target=nil end
 end)
 section:AddDropdown("Режим", {"PRO","INSTINCT","SECRETIVE","ANNIHILATING","ADAPTIVE","MIXED","PING100","PING200","PING300_400"}, function(s) State.CurrentMode=s; lastHUDKey=nil end)
-local g=section:AddToggle("Gravity", function(s) State.Settings.useGravity=s end); g(true)
-local d=section:AddToggle("Drags", function(s) State.Settings.useDrag=s end); d(true)
-local j=section:AddToggle("Predict Jump", function(s) State.Settings.predictJump=s end); j(true)
-local a=section:AddToggle("Lead", function(s) State.Settings.adaptiveLead=s end); a(true)
-local l=section:AddToggle("Target Lock", function(s) State.Settings.targetLock=s end); l(true)
+
+local g = section:AddToggle("Gravity", function(s) State.Settings.useGravity=s end); pcall(function() g(true) end)
+local d = section:AddToggle("Drags", function(s) State.Settings.useDrag=s end); pcall(function() d(true) end)
+local j = section:AddToggle("Predict Jump", function(s) State.Settings.predictJump=s end); pcall(function() j(true) end)
+local a = section:AddToggle("Lead", function(s) State.Settings.adaptiveLead=s end); pcall(function() a(true) end)
+local l = section:AddToggle("Target Lock", function(s) State.Settings.targetLock=s end); pcall(function() l(true) end)
+
 section:AddButton("Статистика (F9)", function()
  local s = State.Stats
  local ac = s.Shots > 0 and string.format("%.1f%%", (s.Hits / s.Shots) * 100) or "-"
